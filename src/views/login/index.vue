@@ -7,6 +7,41 @@
           <span class="line"></span>
           <span class="sub-title">用户登录</span>
         </div>
+        <!-- form表单 -->
+        <el-form class="user-box">
+          <el-form-item >
+            <el-input placeholder="请输入手机号" prefix-icon="el-icon-phone"></el-input>
+          </el-form-item>
+           <el-form-item >
+            <el-input  placeholder="请输入密码" prefix-icon="el-icon-lock" v-model="input" show-password></el-input>
+          </el-form-item>
+          <el-form-item label="">
+            <el-row :gutter="20">
+            <el-col :span="18">
+              <el-input placeholder="请输入验证码" prefix-icon="el-icon-key"></el-input>
+            </el-col>
+            <el-col :span="6">
+              <img src="@/assets/login_captcha.png" alt="" class="captcha">
+            </el-col>
+          </el-row>
+          </el-form-item>
+          <el-form-item>
+            <el-checkbox></el-checkbox>
+            我已阅读并同意<el-link type="primary"  >用户协议</el-link>和<el-link type="primary"  >隐私条款</el-link>
+          </el-form-item>
+          <el-form-item label="">
+            <el-button type="primary" style="width:100%;">登录</el-button>
+          </el-form-item>
+          <el-form-item label="">
+            <el-button type="primary" style="width:100%;">注册</el-button>
+          </el-form-item>
+          
+          
+          
+          
+        </el-form>
+        
+        
       </div>
       <div class="right">
         <img src="@/assets/login_bg.png" alt="">
@@ -16,7 +51,11 @@
 
 <script>
 export default {
-
+  data() {
+    return {
+      input:''
+    }
+  },
 }
 </script>
 
@@ -52,6 +91,13 @@ export default {
         }
         .sub-title{
           font-size: 22px;
+        }
+      }
+      .user-box{
+        margin-top: 27px;
+        .captcha{
+          width: 100%;
+          height: 40px;
         }
       }
     }
