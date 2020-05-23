@@ -8,7 +8,7 @@
         <span class="sub-title">用户登录</span>
       </div>
       <!-- form表单 -->
-      <el-form class="user-box" :model="inputForm" :rules="rules">
+      <el-form class="user-box" :model="inputForm" :rules="rules" ref="formRef">
         <el-form-item prop="phone">
           <el-input placeholder="请输入手机号" prefix-icon="el-icon-phone" v-model="inputForm.phone"></el-input>
         </el-form-item>
@@ -26,23 +26,24 @@
               <el-input placeholder="请输入验证码" prefix-icon="el-icon-key" v-model="inputForm.code"></el-input>
             </el-col>
             <el-col :span="6">
-              <img src="@/assets/login_captcha.png" alt class="captcha" />
+              <img :src="codeUrl" @click="getCode" alt class="captcha" />
             </el-col>
           </el-row>
         </el-form-item>
         <el-form-item prop="ischecked">
-          <el-checkbox v-model='inputForm.ischecked'></el-checkbox>我已阅读并同意
+          <el-checkbox v-model="inputForm.ischecked"></el-checkbox>我已阅读并同意
           <el-link type="primary">用户协议</el-link>和
           <el-link type="primary">隐私条款</el-link>
         </el-form-item>
         <el-form-item label>
-          <el-button type="primary" style="width:100%;">登录</el-button>
+          <el-button type="primary" style="width:100%;" @click="submitForm('formRef')">登录</el-button>
         </el-form-item>
         <el-form-item label>
-          <el-button type="primary" style="width:100%;">注册</el-button>
+          <el-button type="primary" style="width:100%;" @click="dy">注册</el-button>
         </el-form-item>
       </el-form>
     </div>
+    <regiest ref="reg"></regiest>
     <div class="right">
       <img src="@/assets/login_bg.png" alt />
     </div>
@@ -50,43 +51,113 @@
 </template>
 
 <script>
+import {setToken} from '@/utails/token.js'
+import regiest from '@/views/login/regiest.vue'
 export default {
+  components:{
+        regiest:regiest
+      },
   data() {
     return {
+      codeUrl: process.env.VUE_APP_BASEURL + "/captcha?type=login",
       inputForm: {
-        phone: "",
+        phone: "18520409113",
         code: "",
-        password: "",
-        ischecked:false,
+        password: "123456",
+        ischecked: true
       },
       rules: {
         phone: [
-           { validator:(rule, value, callback)=>{
-             if(!value){
-               callback(new Error('不能为空'));
-             }else if(!/^1[358]\d{9}$/.test(value)){
-              callback(new Error('请输入正确的手机号'));
-             }
-               callback()  //阻止代码继续向下执行
-           }, trigger: 'blur' }
-        ],
-        password: [{ required: true, message: "请输入密码", trigger: "blur" },
-         { min: 6, max: 16, message: '请输入正确密码', trigger: 'blur' }],
-        code: [{ required: true, message: "请输入验证码", trigger: "blur" },
-        { min: 4, max: 4, message: '请输入正确的验证码', trigger: 'blur' }],
-        ischecked:[
           {
-            validator:(rule, value,callback)=>{   //不用就不写，如果创建脚手架的时候选了eslint
-              console.log(value);
-              if(!value){
-                callback(new Error('请勾选用户协议'))
+            validator: (rule, value, callback) => {
+              if (!value) {
+                callback(new Error("不能为空"));
+              } else if (!/^1[358]\d{9}$/.test(value)) {
+                callback(new Error("请输入正确的手机号"));
               }
-              callback()  //阻止代码继续向下执行
-            },trigger:'change'
+              callback(); //阻止代码继续向下执行
+            },
+            trigger: "blur"
+          }
+        ],
+        password: [
+          { required: true, message: "请输入密码", trigger: "blur" },
+          { min: 6, max: 66, message: "请输入正确密码", trigger: "blur" }
+        ],
+        code: [
+          { required: true, message: "请输入验证码", trigger: "blur" },
+          { min: 4, max: 4, message: "请输入正确的验证码", trigger: "blur" }
+        ],
+        ischecked: [
+          {
+            validator: (rule, value, callback) => {
+              //不用就不写，如果创建脚手架的时候选了eslint
+              console.log(value);
+              if (!value) {
+                callback(new Error("请勾选用户协议"));
+              }
+              callback(); //阻止代码继续向下执行
+            },
+            trigger: "change"
           }
         ]
       }
     };
+  },
+  methods: {
+    dy:function(){
+      this.$refs.reg.dialogVisible=true
+    },
+    getCode: function() {
+      this.codeUrl =
+        process.env.VUE_APP_BASEURL + "/captcha?type=login&id=" + +new Date();
+    },
+    submitForm(formName) {
+      this.$refs[formName].validate(async valid => {
+        if (valid) {
+          const res = await this.$axios.post("/login", this.inputForm);
+          if (res.data.code == 200) {
+            console.log(res);
+            setToken(res.data.data.token)
+            this.$message({
+              message: "登陆成功",
+              type: "success"
+            });
+            this.$router.push('/layout')
+          } else {
+            this.$message.error(res.data.message);
+            this.codeUrl =
+              process.env.VUE_APP_BASEURL +
+              "/captcha?type=login&id=" +
+              +new Date();
+          }
+          //promise 只适合解决简单的回调地狱问题
+          // this.$axios.post("/login", this.inputForm)
+          // .then(res => {
+          //   console.log(res);
+          //   if (res.data.code == 200) {
+          //     console.log(res);
+          //     this.$message({
+          //       message: "登陆成功",
+          //       type: "success"
+          //     });
+          // } else {
+          //   this.$message.error(res.data.message);
+          //   this.codeUrl =
+          //     process.env.VUE_APP_BASEURL +
+          //     "/captcha?type=login&id=" +
+          //     +new Date();
+          // }
+          // });
+        } else { 
+          this.codeUrl =
+            process.env.VUE_APP_BASEURL +
+            "/captcha?type=login&id=" +
+            +new Date();
+          return false;
+        }
+      });
+    }
   }
 };
 </script>
